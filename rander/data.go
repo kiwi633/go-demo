@@ -5,4 +5,11 @@ type Data struct {
 	Data        []byte
 	Name        string
 	DateTime    string
+	CreateTime  string
+}
+
+type User struct {
+	Name   string
+	IdType string
+	IdNo   string
 }
