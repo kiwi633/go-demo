@@ -3,12 +3,20 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/disintegration/imaging"
+	"github.com/gin-gonic/gin"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
+	"github.com/nfnt/resize"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go/config"
+	"image"
+	"image/jpeg"
+	"image/png"
+	"log"
 	"net/http"
+	"os"
 	"time"
 	"xorm.io/xorm"
 )
@@ -21,14 +29,121 @@ func createRouteHandler(e *echo.Echo, routeName string, handler func(c echo.Cont
 	})
 }
 func main() {
-	//http.HandleFunc("/get/hello", func(w http.ResponseWriter, r *http.Request) {
-	//	w.Header().Set("content-type", "application/json")
-	//	json.Marshal(nil)
-	//	fmt.Fprintf(w, "ok!")
-	//})
-	//http.ListenAndServe(":8089", nil)
+	router := gin.Default()
+	// 为 multipart forms 设置较低的内存限制 (默认是 32 MiB)
+	router.MaxMultipartMemory = 32 << 20 // 8 MiB
+	router.POST("/upload", func(c *gin.Context) {
+		yasuoType := c.Query("yasuoType")
+		if yasuoType == "resize" {
+			imaging01(c)
+		}
+		if yasuoType == "thumbnail" {
+			fileUploadThumbnail(c)
+		}
+	})
+	router.Run(":8081")
 
-	postgresGET()
+}
+
+func fileUploadResize(c *gin.Context) {
+
+	// 单文件
+	start := time.Now()
+	file, _ := c.FormFile("file")
+	log.Println(file.Filename)
+	fff, _ := file.Open()
+	fileType := file.Header.Get("content-type")
+	var img image.Image
+	if fileType == "image/jpeg" {
+		img, _ = jpeg.Decode(fff)
+	}
+	if fileType == "image/png" {
+		img, _ = png.Decode(fff)
+	}
+	m := resize.Resize(0, 0, img, resize.Bilinear)
+	out, err := os.Create("e:/gin-upload-file/yasuo-Resize-" + file.Filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	// write new image to file
+	jpeg.Encode(out, m, nil)
+	log.Println("===========================   ", time.Since(start), "   ************")
+	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+
+}
+
+func fileUploadThumbnail(c *gin.Context) {
+	// 单文件
+	start := time.Now()
+	file, _ := c.FormFile("file")
+	log.Println(file.Filename)
+	fff, _ := file.Open()
+	fileType := file.Header.Get("content-type")
+	var img image.Image
+	if fileType == "image/jpeg" {
+		img, _ = jpeg.Decode(fff)
+	}
+	if fileType == "image/png" {
+		img, _ = png.Decode(fff)
+	}
+	m := resize.Thumbnail(800, 800, img, resize.NearestNeighbor)
+	out, err := os.Create("e:/gin-upload-file/yasuo-Thumbnail-" + file.Filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	// write new image to file
+	jpeg.Encode(out, m, nil)
+	log.Println("===========================   ", time.Since(start), "   ************")
+	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+}
+
+func imaging01(c *gin.Context) {
+	start := time.Now()
+	file, _ := c.FormFile("file")
+	log.Println(file.Filename)
+	fff, _ := file.Open()
+	fileType := file.Header.Get("content-type")
+	var img image.Image
+	if fileType == "image/jpeg" {
+		img, _ = jpeg.Decode(fff)
+	}
+	if fileType == "image/png" {
+		img, _ = png.Decode(fff)
+		encoder := png.Encoder{CompressionLevel: 9}
+		out, _ := os.Create("e:/gin-upload-file/yasuo-imaging0122-" + file.Filename)
+		defer out.Close()
+		encoder.Encode(out, img)
+		return
+	}
+	//m := imaging.Blur(img, 0.75)
+	m := imaging.Resize(img, 800, 0, imaging.Bartlett)
+	out, err := os.Create("e:/gin-upload-file/yasuo-imaging01-" + file.Filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	// write new image to file
+	jpeg.Encode(out, m, nil)
+	log.Println("===========================   ", time.Since(start), "   ************")
+	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+}
+
+func hello(c echo.Context) error {
+	req := c.Request()
+	format := `<code>
+			Protocol: %s<br>
+			Host: %s<br>
+			Remote Address: %s<br>
+			Method: %s<br>
+			Path: %s<br>
+			</code>
+			`
+	return c.HTML(http.StatusOK, fmt.Sprintf(format, req.Proto, req.Host, req.RemoteAddr, req.Method, req.URL.Path))
 }
 
 type Person struct {
@@ -38,6 +153,70 @@ type Person struct {
 	ProjectId  string
 	CreateTime time.Time
 	UpdateTime time.Time
+}
+
+func test() {
+	start := time.Now()
+	// open "test.jpg"
+	file, err := os.Open("E:\\git-code\\cc.jpg")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// decode jpeg into image.Image
+	img, err := jpeg.Decode(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	file.Close()
+	//images, _, _ := image.DecodeConfig(file)
+
+	// resize to width 1000 using Lanczos resampling
+	// and preserve aspect ratio
+	//m := resize.Resize(uint(images.Width), uint(images.Height), img, resize.Lanczos3)
+	m := resize.Resize(0, 0, img, resize.Lanczos3)
+
+	out, err := os.Create("E:\\git-code\\cc-golang3.jpg")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	// write new image to file
+	jpeg.Encode(out, m, nil)
+	log.Println("===========================   ", time.Since(start), "   ************")
+}
+
+func yasuo111(f os.File) {
+	start := time.Now()
+	// open "test.jpg"
+	file, err := os.Open("E:\\git-code\\cc.jpg")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// decode jpeg into image.Image
+	img, err := jpeg.Decode(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	file.Close()
+	//images, _, _ := image.DecodeConfig(file)
+
+	// resize to width 1000 using Lanczos resampling
+	// and preserve aspect ratio
+	//m := resize.Resize(uint(images.Width), uint(images.Height), img, resize.Lanczos3)
+	m := resize.Resize(0, 0, img, resize.Lanczos3)
+
+	out, err := os.Create("E:\\git-code\\cc-golang3.jpg")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer out.Close()
+
+	// write new image to file
+	jpeg.Encode(out, m, nil)
+	log.Println("===========================   ", time.Since(start), "   ************")
 }
 
 var first *Node
