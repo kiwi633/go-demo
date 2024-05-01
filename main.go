@@ -3,17 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/disintegration/imaging"
 	"github.com/gin-gonic/gin"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	imageCompression "github.com/kiwi633/go-demo/image"
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 	"github.com/nfnt/resize"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go/config"
-	"image"
 	"image/jpeg"
-	"image/png"
 	"log"
 	"net/http"
 	"os"
@@ -35,102 +33,14 @@ func main() {
 	router.POST("/upload", func(c *gin.Context) {
 		yasuoType := c.Query("yasuoType")
 		if yasuoType == "resize" {
-			imaging01(c)
+			imageCompression.Imaging01(c)
 		}
 		if yasuoType == "thumbnail" {
-			fileUploadThumbnail(c)
+			imageCompression.FileUploadThumbnail(c)
 		}
 	})
 	router.Run(":8081")
 
-}
-
-func fileUploadResize(c *gin.Context) {
-
-	// 单文件
-	start := time.Now()
-	file, _ := c.FormFile("file")
-	log.Println(file.Filename)
-	fff, _ := file.Open()
-	fileType := file.Header.Get("content-type")
-	var img image.Image
-	if fileType == "image/jpeg" {
-		img, _ = jpeg.Decode(fff)
-	}
-	if fileType == "image/png" {
-		img, _ = png.Decode(fff)
-	}
-	m := resize.Resize(0, 0, img, resize.Bilinear)
-	out, err := os.Create("e:/gin-upload-file/yasuo-Resize-" + file.Filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer out.Close()
-
-	// write new image to file
-	jpeg.Encode(out, m, nil)
-	log.Println("===========================   ", time.Since(start), "   ************")
-	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
-
-}
-
-func fileUploadThumbnail(c *gin.Context) {
-	// 单文件
-	start := time.Now()
-	file, _ := c.FormFile("file")
-	log.Println(file.Filename)
-	fff, _ := file.Open()
-	fileType := file.Header.Get("content-type")
-	var img image.Image
-	if fileType == "image/jpeg" {
-		img, _ = jpeg.Decode(fff)
-	}
-	if fileType == "image/png" {
-		img, _ = png.Decode(fff)
-	}
-	m := resize.Thumbnail(800, 800, img, resize.NearestNeighbor)
-	out, err := os.Create("e:/gin-upload-file/yasuo-Thumbnail-" + file.Filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer out.Close()
-
-	// write new image to file
-	jpeg.Encode(out, m, nil)
-	log.Println("===========================   ", time.Since(start), "   ************")
-	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
-}
-
-func imaging01(c *gin.Context) {
-	start := time.Now()
-	file, _ := c.FormFile("file")
-	log.Println(file.Filename)
-	fff, _ := file.Open()
-	fileType := file.Header.Get("content-type")
-	var img image.Image
-	if fileType == "image/jpeg" {
-		img, _ = jpeg.Decode(fff)
-	}
-	if fileType == "image/png" {
-		img, _ = png.Decode(fff)
-		encoder := png.Encoder{CompressionLevel: 9}
-		out, _ := os.Create("e:/gin-upload-file/yasuo-imaging0122-" + file.Filename)
-		defer out.Close()
-		encoder.Encode(out, img)
-		return
-	}
-	//m := imaging.Blur(img, 0.75)
-	m := imaging.Resize(img, 800, 0, imaging.Bartlett)
-	out, err := os.Create("e:/gin-upload-file/yasuo-imaging01-" + file.Filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer out.Close()
-
-	// write new image to file
-	jpeg.Encode(out, m, nil)
-	log.Println("===========================   ", time.Since(start), "   ************")
-	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 }
 
 func hello(c echo.Context) error {
