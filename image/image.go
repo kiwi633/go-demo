@@ -16,11 +16,6 @@ import (
 	"time"
 )
 
-// 这个是一个测试注释方法
-// 这个是一个测试注释方法
-// 这个是一个测试注释方法
-// 这个是一个测试注释方法
-// 这个是一个测试注释方法
 func Compression() {
 	// Open a test image.
 	src, err := imaging.Open("E:\\git-code\\a.jpg")
@@ -38,11 +33,6 @@ func Compression() {
 	}
 }
 
-// 这个是一个测试注释方法
-// 这个是一个测试注释方法
-// 这个是一个测试注释方法
-// 这个是一个测试注释方法
-// 这个是一个测试注释方法
 func FileUploadThumbnail(c *gin.Context) {
 	// 单文件
 	start := time.Now()

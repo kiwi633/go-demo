@@ -1,6 +1,6 @@
 module github.com/kiwi633/go-demo
 
-go 1.22.0
+go 1.20
 
 require (
 	github.com/disintegration/imaging v1.6.2
