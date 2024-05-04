@@ -1,6 +1,10 @@
 package imageCompression
 
-import "github.com/disintegration/imaging"
+import (
+	"encoding/base64"
+	"github.com/disintegration/imaging"
+	"strings"
+)
 
 // 这个是一个测试注释
 import (
@@ -90,4 +94,28 @@ func Imaging01(c *gin.Context) {
 	jpeg.Encode(out, m, nil)
 	log.Println("===========================   ", time.Since(start), "   ************")
 	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+}
+
+func Base64Image(base64Str string) {
+	imgBase64 := strings.Replace(base64Str, "data:image/png;base64,", "", 1)
+	imageBatys, err := base64.StdEncoding.DecodeString(imgBase64)
+	if err != nil {
+		log.Println("图片base64解码失败！")
+		return
+	}
+	img, _, err := image.Decode(strings.NewReader(string(imageBatys)))
+	if err != nil {
+		log.Println("读取图片失败！")
+		return
+	}
+	outFile, err := os.Create("d://base64.jpg")
+	if err != nil {
+		log.Println("写入图片流失败！")
+		return
+	}
+	err = jpeg.Encode(outFile, img, nil)
+	if err != nil {
+		log.Println("写入图片流失败！")
+		return
+	}
 }
