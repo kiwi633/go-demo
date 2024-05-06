@@ -3,6 +3,7 @@ package imageCompression
 import (
 	"encoding/base64"
 	"github.com/disintegration/imaging"
+	"image/gif"
 	"strings"
 )
 
@@ -74,6 +75,9 @@ func Imaging01(c *gin.Context) {
 	if fileType == "image/jpeg" {
 		img, _ = jpeg.Decode(fff)
 	}
+	if fileType == "image/gif" {
+		img, _ = gif.Decode(fff)
+	}
 	if fileType == "image/png" {
 		img, _ = png.Decode(fff)
 		encoder := png.Encoder{CompressionLevel: 9}
@@ -108,7 +112,7 @@ func Base64Image(base64Str string) {
 		log.Println("读取图片失败！")
 		return
 	}
-	outFile, err := os.Create("d://base64.jpg")
+	outFile, err := os.Create("d://base64-01.jpg")
 	if err != nil {
 		log.Println("写入图片流失败！")
 		return
