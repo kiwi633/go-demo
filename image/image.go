@@ -60,7 +60,7 @@ func FileUploadThumbnail(c *gin.Context) {
 
 	// write new image to file
 	jpeg.Encode(out, m, nil)
-	log.Println("===========================   ", time.Since(start), "   ************")
+	log.Println("耗费时间：", time.Since(start), " ms")
 	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 }
 
@@ -92,7 +92,7 @@ func Imaging01(c *gin.Context) {
 
 	// write new image to file
 	jpeg.Encode(out, m, nil)
-	log.Println("===========================   ", time.Since(start), "   ************")
+	log.Println("耗费时间：", time.Since(start), " ms")
 	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 }
 
