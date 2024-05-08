@@ -2,22 +2,20 @@ package imageCompression
 
 import (
 	"encoding/base64"
-	"github.com/disintegration/imaging"
-	"image/gif"
-	"strings"
-)
-
-// 这个是一个测试注释
-import (
+	"flag"
 	"fmt"
+	"github.com/adrium/goheif"
+	"github.com/disintegration/imaging"
 	"github.com/gin-gonic/gin"
 	"github.com/nfnt/resize"
 	"image"
+	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -75,6 +73,12 @@ func Imaging01(c *gin.Context) {
 	if fileType == "image/jpeg" {
 		img, _ = jpeg.Decode(fff)
 	}
+	if fileType == "image/heic" {
+		//err := convertHeicToJpg("D:/IMG_1450.heic", "D:/IMG_1450.jpg")
+		//if err != nil {
+		//	return
+		//}
+	}
 	if fileType == "image/gif" {
 		img, _ = gif.Decode(fff)
 	}
@@ -122,4 +126,15 @@ func Base64Image(base64Str string) {
 		log.Println("写入图片流失败！")
 		return
 	}
+}
+
+func convertHeicToJpg() {
+	fin, _ := flag.Arg(0), flag.Arg(1)
+	fi, err := os.Open(fin)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fi.Close()
+
+	goheif.ExtractExif(fi)
 }
